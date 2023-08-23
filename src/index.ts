@@ -276,12 +276,21 @@ export default class FootnotesTune implements BlockTune {
       // console.log({ "sups": sups });
 
       sups.forEach((sup, i) => {
-        const note = new Note(sup as HTMLElement, popover, data[i].id);
+        if (sup instanceof HTMLElement) {
+          if (!data[i]) {
+            data[i] = {
+              id: sup.dataset.id || '',
+              content: '',
+              superscript: i + 1,
+            };
+          }
+          const note = new Note(sup as HTMLElement, popover, data[i].id);
 
-        note.index = parseInt(sup.textContent || '0');
+          note.index = parseInt(sup.textContent || '0');
 
-        note.content = data[i].content;
-        FootnotesTune.notes.push(note);
+          note.content = data[i].content;
+          FootnotesTune.notes.push(note);
+        }
       });
     }, timeout);
   }
