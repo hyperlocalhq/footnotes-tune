@@ -146,6 +146,9 @@ export default class FootnotesTune implements BlockTune {
   public save(): FootnotesData {
     const blockNotes = Array.from(this.wrapper.querySelectorAll(`sup[data-tune=${Note.dataAttribute}]`));
     const holderId = this.getHolderId();
+    if (!holderId) {
+      return this.data;
+    }
     if (!FootnotesTune.notes[holderId]) {
       FootnotesTune.notes[holderId] = [];
     }
@@ -230,6 +233,9 @@ export default class FootnotesTune implements BlockTune {
    */
   private insertNote(newNote: Note): void {
     const holderId = this.getHolderId();
+    if (!holderId) {
+      return;
+    }
     if (!FootnotesTune.notes[holderId]) {
       FootnotesTune.notes[holderId] = [];
     }
@@ -259,6 +265,9 @@ export default class FootnotesTune implements BlockTune {
 
         const index = parseInt(node.textContent || '-1');
         const holderId = this.getHolderId();
+        if (!holderId) {
+          return false;
+        }
         if (!FootnotesTune.notes[holderId]) {
           FootnotesTune.notes[holderId] = [];
         }
@@ -283,6 +292,9 @@ export default class FootnotesTune implements BlockTune {
    */
   private updateIndices(): void {
     const holderId = this.getHolderId();
+    if (!holderId) {
+      return;
+    }
     if (!FootnotesTune.notes[holderId]) {
       FootnotesTune.notes[holderId] = [];
     }
@@ -299,17 +311,21 @@ export default class FootnotesTune implements BlockTune {
     let popover = this.popover;
     let data = this.data;
     const timeout = 300;
-    const holderId = this.getHolderId();
-    if (!FootnotesTune.notes[holderId]) {
-      FootnotesTune.notes[holderId] = [];
-    }
-    setTimeout(function() {
+    setTimeout(() => {
       const sups = content.querySelectorAll(`sup[data-tune=${Note.dataAttribute}]`);
       // console.log("-----");
       // console.log({ "innerHTML": content.innerHTML });
       // console.log({ "query": `sup[data-tune=${Note.dataAttribute}]` });
       // console.log({ "data": data });
       // console.log({ "sups": sups });
+
+      const holderId = this.getHolderId();
+      if (!holderId) {
+        return;
+      }
+      if (!FootnotesTune.notes[holderId]) {
+        FootnotesTune.notes[holderId] = [];
+      }
 
       sups.forEach((sup, i) => {
         if (sup instanceof HTMLElement) {
