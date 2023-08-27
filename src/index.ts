@@ -20,8 +20,18 @@ export interface FootnotesTuneConfig {
   shortcut?: string;
 }
 
+/**
+ * NoteMapper for Editor.js
+ */
+type NoteMapper = {
+  [key:string]: Note;
+};
+
+/**
+ * NotesForHolders for Editor.js
+ */
 type NotesForHolders = {
-  [key:string]: Note[];
+  [key:string]: NoteMapper;
 };
 
 /**
@@ -62,6 +72,11 @@ export default class FootnotesTune implements BlockTune {
    * We need to observe mutations to check if footnote removed
    */
   private observer = new MutationObserver(this.contentDidMutated.bind(this));
+
+  /**
+   * We need to observe mutations to check if footnote removed
+   */
+  private intersectionObserver = new IntersectionObserver(this.blocksMoved.bind(this));
 
   /**
    * Data passed on render
@@ -150,9 +165,15 @@ export default class FootnotesTune implements BlockTune {
       return this.data;
     }
     if (!FootnotesTune.notes[holderId]) {
-      FootnotesTune.notes[holderId] = [];
+      FootnotesTune.notes[holderId] = {};
     }
-    return FootnotesTune.notes[holderId].filter(note => blockNotes.includes(note.node)).map(note => note.save());
+    let noteData: NoteData[] = [];
+    for (const note of Object.values(FootnotesTune.notes[holderId])) {
+      if (blockNotes.includes(note.node)) {
+        noteData.push(note.save());
+      }
+    }
+    return noteData;
   }
 
   /**
@@ -165,10 +186,13 @@ export default class FootnotesTune implements BlockTune {
 
     this.hydrate(pluginsContent);
 
+    // At this point, the wrapper is not yet attached to DOM, so
+    // this.wrapper.isConnected === false;
     this.observer.observe(this.wrapper, {
       childList: true,
       subtree: true,
     });
+    this.intersectionObserver.observe(this.wrapper);
 
     this.shortcut = new Shortcut({
       on: this.wrapper,
@@ -237,17 +261,9 @@ export default class FootnotesTune implements BlockTune {
       return;
     }
     if (!FootnotesTune.notes[holderId]) {
-      FootnotesTune.notes[holderId] = [];
+      FootnotesTune.notes[holderId] = {};
     }
-    let nextNoteIndex = FootnotesTune.notes[holderId].findIndex(note =>
-      newNote.range.compareBoundaryPoints(Range.START_TO_START, note.range) === -1
-    );
-
-    if (nextNoteIndex === -1) {
-      nextNoteIndex = FootnotesTune.notes[holderId].length;
-    }
-
-    FootnotesTune.notes[holderId].splice(nextNoteIndex, 0, newNote);
+    FootnotesTune.notes[holderId][newNote.id] = newNote;
   }
 
   /**
@@ -259,19 +275,24 @@ export default class FootnotesTune implements BlockTune {
     const shouldUpdateIndices = mutationsList.some(record => {
       const supAdded = Array.from(record.addedNodes).some(node => node.nodeName === 'SUP');
       const supRemoved = Array.from(record.removedNodes).some(node => {
-        if (node.nodeName !== 'SUP') {
+        if (!(node instanceof HTMLElement)) {
+          return false;
+        }
+        if (node.nodeName !== 'SUP' || node.dataset.tune !== Note.dataAttribute) {
           return false;
         }
 
-        const index = parseInt(node.textContent || '-1');
+        const noteId = node.dataset.id || '';
         const holderId = this.getHolderId();
         if (!holderId) {
           return false;
         }
         if (!FootnotesTune.notes[holderId]) {
-          FootnotesTune.notes[holderId] = [];
+          FootnotesTune.notes[holderId] = {};
         }
-        FootnotesTune.notes[holderId].splice(index - 1, 1);
+        if (FootnotesTune.notes[holderId][noteId]) {
+          delete FootnotesTune.notes[holderId][noteId];
+        }
 
         return true;
       });
@@ -287,6 +308,32 @@ export default class FootnotesTune implements BlockTune {
     }
   }
 
+  private blocksMoved(): void {
+    // TODO: maybe this event handler can be optimized or happen after a delay
+    const holderId = this.getHolderId();
+    if (!holderId) {
+      return;
+    }
+    const holder = document.getElementById(holderId);
+    let shouldUpdateIndices = false;
+    if (holder) {
+      const sups:NodeListOf<HTMLElement> = holder.querySelectorAll(`sup[data-tune=${Note.dataAttribute}]`);
+      for (let i = 0, len = sups.length; i < len; i++) {
+        let sup = sups[i];
+        if (sup.innerText !== (i + 1).toString()) {
+          shouldUpdateIndices = true;
+          break;
+        }
+      }
+    }
+    /**
+     * If sup text doesn't match the index of it
+     */
+    if (shouldUpdateIndices) {
+      this.updateIndices();
+    }
+  }
+
   /**
    * Updates notes indices
    */
@@ -296,9 +343,20 @@ export default class FootnotesTune implements BlockTune {
       return;
     }
     if (!FootnotesTune.notes[holderId]) {
-      FootnotesTune.notes[holderId] = [];
+      FootnotesTune.notes[holderId] = {};
     }
-    FootnotesTune.notes[holderId].forEach((note, i) => note.index = i + 1);
+    const holder = document.getElementById(holderId);
+    if (holder) {
+      const sups:NodeListOf<HTMLElement> = holder.querySelectorAll(`sup[data-tune=${Note.dataAttribute}]`);
+      for (let i = 0, len = sups.length; i < len; i++) {
+        const sup = sups[i];
+        const noteId = sup.dataset.id || '';
+        const note = FootnotesTune.notes[holderId][noteId];
+        if (note) {
+          note.index = i + 1;
+        }
+      }
+    }
   }
 
   /**
@@ -324,7 +382,7 @@ export default class FootnotesTune implements BlockTune {
         return;
       }
       if (!FootnotesTune.notes[holderId]) {
-        FootnotesTune.notes[holderId] = [];
+        FootnotesTune.notes[holderId] = {};
       }
 
       sups.forEach((sup, i) => {
@@ -341,7 +399,7 @@ export default class FootnotesTune implements BlockTune {
           note.index = parseInt(sup.textContent || '0');
 
           note.content = data[i].content;
-          FootnotesTune.notes[holderId].push(note);
+          FootnotesTune.notes[holderId][note.id] = note;
         }
       });
     }, timeout);
