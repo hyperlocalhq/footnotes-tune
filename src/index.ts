@@ -298,17 +298,12 @@ export default class FootnotesTune implements BlockTune {
           return false;
         }
 
-        const noteId = node.dataset.id || '';
         const holderId = this.getHolderId();
         if (!holderId) {
           return false;
         }
-        if (!FootnotesTune.notes[holderId]) {
-          FootnotesTune.notes[holderId] = {};
-        }
-        if (FootnotesTune.notes[holderId][noteId]) {
-          delete FootnotesTune.notes[holderId][noteId];
-        }
+        // keep the mappers until form save, don't
+        // delete FootnotesTune.notes[holderId][noteId];
 
         return true;
       });
@@ -382,7 +377,7 @@ export default class FootnotesTune implements BlockTune {
   private hydrate(content: HTMLElement): void {
     /* content might be not yet populated, so we are using a timeout */
     let popover = this.popover;
-    let data = this.data || [];
+    let blockData = this.data || [];
     const timeout = 300;
     setTimeout(() => {
       const sups = content.querySelectorAll(`sup[data-tune=${Note.dataAttribute}]`);
@@ -402,19 +397,27 @@ export default class FootnotesTune implements BlockTune {
 
       sups.forEach((sup, i) => {
         if (sup instanceof HTMLElement) {
-          if (!data[i]) {
-            data[i] = {
-              id: sup.dataset.id || '',
-              content: '',
-              superscript: i + 1,
+          const noteId = sup.dataset.id || '';
+          const oldNote = FootnotesTune.notes[holderId][noteId];
+          let noteContent = '';
+          let index= 0;
+          if (oldNote) {
+            noteContent = oldNote.content || '';
+            index = oldNote.index || 0;
+          }
+          if (!blockData[i]) {
+            blockData[i] = {
+              id: noteId,
+              content: noteContent,
+              superscript: index + 1,
             };
           }
-          const note = new Note(sup as HTMLElement, popover, data[i].id);
-
-          note.index = parseInt(sup.textContent || '0');
-
-          note.content = data[i].content;
-          FootnotesTune.notes[holderId][note.id] = note;
+          const newNote = new Note(sup as HTMLElement, popover, blockData[i].id);
+          newNote.content = blockData[i].content;
+          if (FootnotesTune.notes[holderId][newNote.id]) {
+            delete FootnotesTune.notes[holderId][newNote.id];
+          }
+          FootnotesTune.notes[holderId][newNote.id] = newNote;
         }
       });
     }, timeout);
