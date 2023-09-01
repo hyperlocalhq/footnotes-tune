@@ -452,7 +452,6 @@ export default class FootnotesTune implements BlockTune {
     if (!FootnotesTune.notes[holderId]) {
       FootnotesTune.notes[holderId] = {};
     }
-    const useFromCache = sups.length != blockData.length;
     sups.forEach((sup, i) => {
       if (sup instanceof HTMLElement) {
         const noteId = sup.dataset.id || '';
@@ -463,7 +462,7 @@ export default class FootnotesTune implements BlockTune {
           noteContent = oldNote.content || '';
           index = oldNote.index || 0;
         }
-        if (oldNote && useFromCache) {
+        if (!blockData[i]) {
           blockData[i] = {
             id: noteId,
             content: noteContent,
