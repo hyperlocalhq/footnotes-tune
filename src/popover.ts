@@ -338,11 +338,9 @@ export default class Popover {
       ).replace(
         /<p>/ig, ''
       );
-      console.log("html:", html);
       document.execCommand("insertHTML", false, html);
     } else if (clipboardData?.types.includes("text/plain")) {
       let text = event.clipboardData?.getData("text/plain");
-      console.log("plain text:", text);
       let html = text?.split("\n").join('<br /><br />');
       document.execCommand("insertHTML", false, html);
     }

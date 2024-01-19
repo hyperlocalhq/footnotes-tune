@@ -77,6 +77,10 @@
         align-items: center;
 
         padding-top: 10px;
+
+        &::before {
+            user-select: none;
+        }
     }
 
     &__button {
@@ -95,7 +99,10 @@
 
         &--right {
             margin-left: auto;
+            user-select: none;
         }
+
+        user-select: none;
     }
 
     &__hint {
