@@ -1,6 +1,6 @@
 import styles from  './index.pcss';
 
-import { API, BlockTune, BlockAPI } from '@editorjs/editorjs';
+import {API, BlockTune, BlockAPI} from '@editorjs/editorjs';
 import { make } from './dom';
 import Popover from './popover';
 import Note, { NoteData } from './note';
@@ -281,6 +281,12 @@ export default class FootnotesTune implements BlockTune {
 
     this.api.toolbar.toggleBlockSettings(false);
   }
+
+  /**
+   * Callback on paste
+   *
+   * @param event - the pasting event
+   */
 
   /**
    * Inserts new note to notes array

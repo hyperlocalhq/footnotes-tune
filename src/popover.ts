@@ -106,6 +106,7 @@ export default class Popover {
     this.currentNote = note;
     this.textarea.innerHTML = note.content;
     this.textarea.contentEditable = this.readOnly ? 'false' : 'true';
+    this.textarea.addEventListener('paste', this.paste.bind(this));
 
     document.addEventListener('click', this.onClickOutside, true);
     window.addEventListener('resize', this.move);
@@ -310,6 +311,41 @@ export default class Popover {
     selection?.addRange(range);
 
     this.textarea.normalize();
+  }
+
+  private paste(event: ClipboardEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!(event && "clipboardData" in event)) {return;}
+
+    const clipboardData = event?.clipboardData;
+    if (clipboardData?.types.includes("text/html")) {
+      let html = event.clipboardData?.getData("text/html") || "";
+      const sanitizerConfig = {
+        b: {}, // leave <b> without any attributes
+        strong: {}, // leave <b> without any attributes
+        p: {}, // leave <p> without any attributes
+        br: {}, // leave <br> without any attributes
+        a: {
+          href: true, // leave <a> with href
+          target: '_blank' // add 'target="_blank"'
+        },
+      };
+      html = this.api.sanitizer.clean(html, sanitizerConfig);
+      html = html.replace(
+        /<\/p>/ig, '<br /><br />'
+      ).replace(
+        /<p>/ig, ''
+      );
+      console.log("html:", html);
+      document.execCommand("insertHTML", false, html);
+    } else if (clipboardData?.types.includes("text/plain")) {
+      let text = event.clipboardData?.getData("text/plain");
+      console.log("plain text:", text);
+      let html = text?.split("\n").join('<br /><br />');
+      document.execCommand("insertHTML", false, html);
+    }
   }
 
   /**
