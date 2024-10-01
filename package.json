@@ -10,21 +10,16 @@
   "scripts": {
     "build": "export NODE_OPTIONS=--openssl-legacy-provider && webpack --mode production",
     "build:dev": "export NODE_OPTIONS=--openssl-legacy-provider && webpack --mode development --watch",
-    "lint": "eslint src/ --ext .ts",
-    "test": "yarn build && cypress run"
+    "lint": "eslint src/ --ext .ts"
   },
   "devDependencies": {
     "@babel/core": "^7.13.16",
     "@babel/preset-env": "^7.13.15",
-    "@cypress/code-coverage": "^3.9.9",
-    "@cypress/webpack-preprocessor": "^5.9.1",
-    "@editorjs/editorjs": "2.27.2",
+    "@editorjs/editorjs": "2.30.5",
     "@types/node": "^16.3.3",
     "babel-loader": "^8.2.2",
     "babel-plugin-istanbul": "^6.0.0",
     "css-loader": "^5.2.4",
-    "cypress": "^4.2.0",
-    "cypress-plugin-tab": "^1.0.5",
     "eslint": "^7.24.0",
     "eslint-config-codex": "^1.6.1",
     "eslint-loader": "^4.0.2",

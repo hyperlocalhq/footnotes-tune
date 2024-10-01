@@ -53,6 +53,12 @@ const debounce = <T extends (...args: any[]) => any>(func: T, delay: number): an
   };
 };
 
+declare global {
+  interface Window {
+    restoreSelection?: () => void;
+  }
+}
+
 /**
  * FootnotesTune for Editor.js
  */
@@ -159,9 +165,6 @@ export default class FootnotesTune implements BlockTune {
    * Render Tune icon
    */
   public render(): HTMLElement {
-    const selection = window.getSelection()!;
-    const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-
     const tuneWrapper = make('div', styles['ej-fn-tune']);
     const icon = make('div', styles['ej-fn-tune__icon'], {
       innerHTML: IconAddFootnote,
@@ -173,13 +176,17 @@ export default class FootnotesTune implements BlockTune {
     tuneWrapper.appendChild(icon);
     tuneWrapper.appendChild(label);
 
-    if (!range || !this.wrapper.contains(range.startContainer)) {
-      tuneWrapper.classList.add(styles['ej-fn-tune--disabled']);
-    } else {
-      tuneWrapper.addEventListener('click', () => {
+    // Remove the condition that disables the button
+    tuneWrapper.addEventListener('click', () => {
+      if (typeof window.restoreSelection === 'function') {
+        window.restoreSelection();
+      }
+      const selection = window.getSelection();
+      const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+      if (range) {
         this.onClick(range);
-      });
-    }
+      }
+    });
 
     return tuneWrapper;
   }
@@ -188,21 +195,11 @@ export default class FootnotesTune implements BlockTune {
    * Saves notes data
    */
   public save(): FootnotesData {
-    const blockNotes = Array.from(this.wrapper.querySelectorAll(`sup[data-tune=${Note.dataAttribute}]`));
     const holderId = this.getHolderId();
-    if (!holderId) {
-      return this.data;
-    }
-    if (!FootnotesTune.notes[holderId]) {
-      FootnotesTune.notes[holderId] = {};
-    }
-    let noteData: NoteData[] = [];
-    for (const note of Object.values(FootnotesTune.notes[holderId])) {
-      if (blockNotes.includes(note.node)) {
-        noteData.push(note.save());
-      }
-    }
-    return noteData;
+    if (!holderId) return [];
+
+    const notes = FootnotesTune.notes[holderId];
+    return Object.values(notes).map(note => note.save());
   }
 
   /**
@@ -443,44 +440,25 @@ export default class FootnotesTune implements BlockTune {
    * @param content - Tool's content
    */
   private hydrate(content: HTMLElement): void {
-    /* content might be not yet populated, so we are using a timeout */
-    let blockData = this.data || [];
     const sups = content.querySelectorAll(`sup[data-tune=${Note.dataAttribute}]`);
-    // console.log("-----");
-    // console.log({ "innerHTML": content.innerHTML });
-    // console.log({ "query": `sup[data-tune=${Note.dataAttribute}]` });
-    // console.log({ "data": data });
-    // console.log({ "sups": sups });
     const holderId = this.getHolderId();
-    if (!holderId) {
-      return;
-    }
+    if (!holderId) return;
+
     if (!FootnotesTune.notes[holderId]) {
       FootnotesTune.notes[holderId] = {};
     }
+
     sups.forEach((sup, i) => {
       if (sup instanceof HTMLElement) {
         const noteId = sup.dataset.id || '';
-        const oldNote = FootnotesTune.notes[holderId][noteId];
-        let noteContent = '';
-        let index= 0;
-        if (oldNote) {
-          noteContent = oldNote.content || '';
-          index = oldNote.index || 0;
-        }
-        if (!blockData[i]) {
-          blockData[i] = {
-            id: noteId,
-            content: noteContent,
-            superscript: index + 1,
-          };
-        }
-        const newNote = new Note(sup as HTMLElement, this.popover, blockData[i].id);
-        newNote.content = blockData[i].content;
-        if (FootnotesTune.notes[holderId][newNote.id]) {
-          delete FootnotesTune.notes[holderId][newNote.id];
-        }
+        const noteData = this.data.find(note => note.id === noteId) || { content: '', superscript: i + 1 };
+
+        const newNote = new Note(sup as HTMLElement, this.popover, noteId);
+        newNote.content = noteData.content;
+        newNote.index = noteData.superscript;
+
         FootnotesTune.notes[holderId][newNote.id] = newNote;
+        newNote.listenToClicks();
       }
     });
   }

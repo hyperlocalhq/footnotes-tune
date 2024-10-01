@@ -104,8 +104,7 @@ export default class Note {
    */
   public set index(index: number) {
     this._index = index;
-
-    this.node.textContent = this._index.toString();
+    this.updateNodeContent();
   }
 
   /**
@@ -122,7 +121,7 @@ export default class Note {
     return {
       id: this.id,
       content: this.content,
-      superscript: this.index,
+      superscript: this._index,
     };
   }
 
@@ -138,4 +137,8 @@ export default class Note {
   private openPopover = (): void => {
     this.popover.open(this);
   };
+
+  private updateNodeContent(): void {
+    this.node.textContent = this._index.toString();
+  }
 }

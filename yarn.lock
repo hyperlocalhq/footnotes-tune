@@ -1145,10 +1145,10 @@
   resolved "https://registry.npmjs.org/@discoveryjs/json-ext/-/json-ext-0.5.3.tgz"
   integrity sha512-Fxt+AfXgjMoin2maPIYzFZnQjAXjAL0PHscM5pRTtatFqB+vZxAM9tLp2Optnuw3QOQC40jTNeGYFOMvyf7v9g==
 
-"@editorjs/editorjs@2.27.2":
-  version "2.27.2"
-  resolved "https://registry.npmjs.org/@editorjs/editorjs/-/editorjs-2.27.2.tgz"
-  integrity sha512-k4LavGJijAP0F1wATQ0fTo10xtBSny9z6yWaP3ANqqtyKr+pBMind5NQzckqYI0yPp31GObpcS/HsFGsFOGcug==
+"@editorjs/editorjs@2.30.5":
+  version "2.30.5"
+  resolved "https://registry.npmjs.org/@editorjs/editorjs/-/editorjs-2.30.5.tgz"
+  integrity sha512-sE7m/UPbuf+nSGjv9cmWggFsfvtYlgEX7PCby2lZWvOsOLbRxuLT+ZYlwbWshD+8BFJwiAmBj9e+ScZcOjCzeg==
 
 "@eslint/eslintrc@^0.4.2":
   version "0.4.2"
