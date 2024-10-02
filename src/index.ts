@@ -55,8 +55,16 @@ const debounce = <T extends (...args: any[]) => any>(func: T, delay: number): an
 
 declare global {
   interface Window {
-    restoreSelection?: () => void;
+    restoreSelection?: (blockId: string) => void;
+    blockSelections?: {
+      [key: string]: Range;
+    };
   }
+}
+
+// Then you should check if it exists before using:
+if (!window.blockSelections) {
+  window.blockSelections = {};
 }
 
 /**
@@ -172,19 +180,23 @@ export default class FootnotesTune implements BlockTune {
     const label = make('div', styles['ej-fn-tune__label'], {
       innerText: this.api.i18n.t('Footnote'),
     });
+    const block = this.block;
 
     tuneWrapper.appendChild(icon);
     tuneWrapper.appendChild(label);
 
     // Remove the condition that disables the button
     tuneWrapper.addEventListener('click', () => {
-      if (typeof window.restoreSelection === 'function') {
-        window.restoreSelection();
-      }
-      const selection = window.getSelection();
-      const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-      if (range) {
-        this.onClick(range);
+      if (typeof window.blockSelections === 'object' &&
+        typeof window.blockSelections[block.id] !== 'undefined' &&
+        typeof window.restoreSelection === 'function'
+      ) {
+        window.restoreSelection(block.id);
+        const selection = window.getSelection();
+        const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+        if (range) {
+          this.onClick(range);
+        }
       }
     });
 
