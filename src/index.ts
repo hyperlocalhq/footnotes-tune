@@ -207,11 +207,23 @@ export default class FootnotesTune implements BlockTune {
    * Saves notes data
    */
   public save(): FootnotesData {
+    const blockNotes = Array.from(this.wrapper.querySelectorAll(`sup[data-tune=${Note.dataAttribute}]`));
     const holderId = this.getHolderId();
-    if (!holderId) return [];
+    const noteData: NoteData[] = [];
 
-    const notes = FootnotesTune.notes[holderId];
-    return Object.values(notes).map(note => note.save());
+    if (!holderId) {
+      return this.data;
+    }
+    if (!FootnotesTune.notes[holderId]) {
+      FootnotesTune.notes[holderId] = {};
+    }
+
+    for (const note of Object.values(FootnotesTune.notes[holderId])) {
+      if (blockNotes.includes(note.node)) {
+        noteData.push(note.save());
+      }
+    }
+    return noteData;
   }
 
   /**
