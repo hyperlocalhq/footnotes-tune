@@ -6,5 +6,10 @@
     "jsdoc": {
       "mode": "typescript"
     }
+  },
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "off",
+     "@typescript-eslint/strict-boolean-expressions": "off",
+     "@typescript-eslint/naming-convention": "off"
   }
 }

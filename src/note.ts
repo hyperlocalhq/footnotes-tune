@@ -1,6 +1,6 @@
 import { make } from './dom';
 import styles from './note.pcss';
-import Popover from './popover';
+import type Popover from './popover';
 import { nanoid } from 'nanoid';
 
 /**
@@ -125,11 +125,18 @@ export default class Note {
     };
   }
 
+  /**
+   *
+   */
   public listenToClicks(): void {
     this.node.removeEventListener('click', this.openPopover);
     this.node.addEventListener('click', this.openPopover);
   }
 
+  /**
+   *
+   * @param popover
+   */
   public updatePopover(popover: Popover): void {
     this.popover = popover;
   }
@@ -138,6 +145,9 @@ export default class Note {
     this.popover.open(this);
   };
 
+  /**
+   *
+   */
   private updateNodeContent(): void {
     this.node.textContent = this._index.toString();
   }

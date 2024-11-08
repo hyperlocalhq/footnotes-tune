@@ -1,13 +1,15 @@
 import styles from  './index.pcss';
 
-import {API, BlockTune, BlockAPI} from '@editorjs/editorjs';
+import type { API, BlockTune, BlockAPI } from '@editorjs/editorjs';
 import { make } from './dom';
 import Popover from './popover';
-import Note, { NoteData } from './note';
+import type { NoteData } from './note';
+import Note from './note';
 import IconAddFootnote from './assets/add-footnote.svg';
 import Shortcut from '@codexteam/shortcuts';
 
 const DEBOUNCE_DELAY = 500;
+
 /**
  * Type of Footnotes Tune data
  */
@@ -44,9 +46,13 @@ type PopoverMapper = {
 
 /**
  * A helper to delay event handling
+ *
+ * @param func
+ * @param delay
  */
 const debounce = <T extends (...args: any[]) => any>(func: T, delay: number): any => {
   let timer: ReturnType<typeof setTimeout>;
+
   return (...args: Parameters<T>) => {
     clearTimeout(timer);
     timer = setTimeout(() => func.apply(this, args), delay);
@@ -194,6 +200,7 @@ export default class FootnotesTune implements BlockTune {
         window.restoreSelection(block.id);
         const selection = window.getSelection();
         const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+
         if (range) {
           this.onClick(range);
         }
@@ -223,6 +230,7 @@ export default class FootnotesTune implements BlockTune {
         noteData.push(note.save());
       }
     }
+
     return noteData;
   }
 
@@ -235,6 +243,7 @@ export default class FootnotesTune implements BlockTune {
     this.wrapper.append(pluginsContent, this.popover.node);
 
     const timeout = 300;
+
     setTimeout(() => {
       this.hydrate(pluginsContent);
     }, timeout);
@@ -277,13 +286,18 @@ export default class FootnotesTune implements BlockTune {
     this.shortcut?.remove();
   }
 
+  /**
+   *
+   */
   private getHolderId(): string {
     if (!this.holderId) {
       const holder = this.wrapper.closest('[data-editorjs-holder]');
+
       if (holder) {
         this.holderId = holder.getAttribute('id') || '';
       }
     }
+
     return this.holderId;
   }
 
@@ -316,6 +330,7 @@ export default class FootnotesTune implements BlockTune {
    */
   private insertNote(newNote: Note): void {
     const holderId = this.getHolderId();
+
     if (!holderId) {
       return;
     }
@@ -342,6 +357,7 @@ export default class FootnotesTune implements BlockTune {
         }
 
         const holderId = this.getHolderId();
+
         if (!holderId) {
           return false;
         }
@@ -362,23 +378,31 @@ export default class FootnotesTune implements BlockTune {
     }
   }
 
+  /**
+   *
+   */
   private blocksMoved(): void {
     const holderId = this.getHolderId();
+
     if (!holderId) {
       return;
     }
     const holder = document.getElementById(holderId);
     let shouldUpdateIndices = false;
     let shouldRehydrateAll = false;
+
     if (holder) {
-      let oldBlocksCount = parseInt(holder.dataset.blocksCount || '0', 10);
-      let newBlocksCount = this.api.blocks.getBlocksCount();
+      const oldBlocksCount = parseInt(holder.dataset.blocksCount || '0', 10);
+      const newBlocksCount = this.api.blocks.getBlocksCount();
+
       holder.dataset.blocksCount = newBlocksCount.toString();
       shouldRehydrateAll = newBlocksCount < oldBlocksCount;
 
       const sups:NodeListOf<HTMLElement> = holder.querySelectorAll(`sup[data-tune=${Note.dataAttribute}]`);
+
       for (let i = 0, len = sups.length; i < len; i++) {
-        let sup = sups[i];
+        const sup = sups[i];
+
         if (sup.innerText !== (i + 1).toString()) {
           shouldUpdateIndices = true;
           break;
@@ -389,6 +413,7 @@ export default class FootnotesTune implements BlockTune {
          * Some blocks removed or joined
          */
         const timeout = 300;
+
         setTimeout(() => {
           this.refreshNotes();
         }, timeout);
@@ -406,6 +431,7 @@ export default class FootnotesTune implements BlockTune {
    */
   private updateIndices(): void {
     const holderId = this.getHolderId();
+
     if (!holderId) {
       return;
     }
@@ -413,12 +439,15 @@ export default class FootnotesTune implements BlockTune {
       FootnotesTune.notes[holderId] = {};
     }
     const holder = document.getElementById(holderId);
+
     if (holder) {
       const sups:NodeListOf<HTMLElement> = holder.querySelectorAll(`sup[data-tune=${Note.dataAttribute}]`);
+
       for (let i = 0, len = sups.length; i < len; i++) {
         const sup = sups[i];
         const noteId = sup.dataset.id || '';
         const note = FootnotesTune.notes[holderId][noteId];
+
         if (note) {
           note.index = i + 1;
         }
@@ -431,6 +460,7 @@ export default class FootnotesTune implements BlockTune {
    */
   private refreshNotes(): void {
     const holderId = this.getHolderId();
+
     if (!holderId) {
       return;
     }
@@ -438,19 +468,24 @@ export default class FootnotesTune implements BlockTune {
       FootnotesTune.notes[holderId] = {};
     }
     const holder = document.getElementById(holderId);
+
     if (holder) {
       const sups:NodeListOf<HTMLElement> = holder.querySelectorAll(`sup[data-tune=${Note.dataAttribute}]`);
+
       for (let i = 0, len = sups.length; i < len; i++) {
         const sup = sups[i];
         const noteId = sup.dataset.id || '';
         const note = FootnotesTune.notes[holderId][noteId];
+
         if (note.node !== sup) {
           note.node = sup;
         }
         note.index = i + 1;
         const blockNode = sup.closest('.ce-block');
+
         if (blockNode instanceof HTMLElement) {
           const blockId: string = blockNode.dataset.id || '';
+
           note.updatePopover(FootnotesTune.popovers[blockId]);
           note.listenToClicks();
         }
@@ -466,7 +501,10 @@ export default class FootnotesTune implements BlockTune {
   private hydrate(content: HTMLElement): void {
     const sups = content.querySelectorAll(`sup[data-tune=${Note.dataAttribute}]`);
     const holderId = this.getHolderId();
-    if (!holderId) return;
+
+    if (!holderId) {
+      return;
+    }
 
     if (!FootnotesTune.notes[holderId]) {
       FootnotesTune.notes[holderId] = {};
@@ -475,9 +513,11 @@ export default class FootnotesTune implements BlockTune {
     sups.forEach((sup, i) => {
       if (sup instanceof HTMLElement) {
         const noteId = sup.dataset.id || '';
-        const noteData = this.data.find(note => note.id === noteId) || { content: '', superscript: i + 1 };
+        const noteData = this.data.find(note => note.id === noteId) || { content: '',
+          superscript: i + 1 };
 
         const newNote = new Note(sup as HTMLElement, this.popover, noteId);
+
         newNote.content = noteData.content;
         newNote.index = noteData.superscript;
 

@@ -1,8 +1,8 @@
 import { make } from './dom';
 import styles from './popover.pcss';
 import Note from './note';
-import { API, BlockAPI } from '@editorjs/editorjs';
-import { FootnotesTuneConfig } from './index';
+import type { API, BlockAPI } from '@editorjs/editorjs';
+import type { FootnotesTuneConfig } from './index';
 import { isRangeAtEnd, setSelectionAtEnd, throttled } from './utils';
 
 /**
@@ -59,6 +59,7 @@ export default class Popover {
   private config: FootnotesTuneConfig;
 
   /**
+   * @param block
    * @param wrapper - Tune's wrapper
    * @param api - Editor.js API
    * @param config - Tune's config
@@ -313,15 +314,22 @@ export default class Popover {
     this.textarea.normalize();
   }
 
+  /**
+   *
+   * @param event
+   */
   private paste(event: ClipboardEvent): void {
     event.preventDefault();
     event.stopPropagation();
 
-    if (!(event && "clipboardData" in event)) {return;}
+    if (!(event && 'clipboardData' in event)) {
+      return;
+    }
 
     const clipboardData = event?.clipboardData;
-    if (clipboardData?.types.includes("text/html")) {
-      let html = event.clipboardData?.getData("text/html") || "";
+
+    if (clipboardData?.types.includes('text/html')) {
+      let html = event.clipboardData?.getData('text/html') || '';
       const sanitizerConfig = {
         b: {}, // leave <b> without any attributes
         strong: {}, // leave <b> without any attributes
@@ -329,20 +337,22 @@ export default class Popover {
         br: {}, // leave <br> without any attributes
         a: {
           href: true, // leave <a> with href
-          target: '_blank' // add 'target="_blank"'
+          target: '_blank', // add 'target="_blank"'
         },
       };
+
       html = this.api.sanitizer.clean(html, sanitizerConfig);
       html = html.replace(
         /<\/p>/ig, '<br /><br />'
       ).replace(
         /<p>/ig, ''
       );
-      document.execCommand("insertHTML", false, html);
-    } else if (clipboardData?.types.includes("text/plain")) {
-      let text = event.clipboardData?.getData("text/plain");
-      let html = text?.split("\n").join('<br /><br />');
-      document.execCommand("insertHTML", false, html);
+      document.execCommand('insertHTML', false, html);
+    } else if (clipboardData?.types.includes('text/plain')) {
+      const text = event.clipboardData?.getData('text/plain');
+      const html = text?.split('\n').join('<br /><br />');
+
+      document.execCommand('insertHTML', false, html);
     }
   }
 

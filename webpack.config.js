@@ -1,5 +1,15 @@
-module.exports = {
+import ESLintPlugin from 'eslint-webpack-plugin';
+import postcssNestedAncestors from 'postcss-nested-ancestors';
+import postcssNested from 'postcss-nested';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+
+export default {
   entry: './src/index.ts',
+  mode: 'production',
   module: {
     rules: [
       {
@@ -13,7 +23,7 @@ module.exports = {
             },
           },
           'ts-loader',
-          'eslint-loader'
+          // 'eslint-loader'
         ],
       },
       {
@@ -32,8 +42,8 @@ module.exports = {
             options: {
               postcssOptions: {
                 plugins: [
-                  require('postcss-nested-ancestors'),
-                  require('postcss-nested')
+                  postcssNestedAncestors,
+                  postcssNested,
                 ]
               }
             }
@@ -54,11 +64,25 @@ module.exports = {
     extensions: ['.ts', '.js'],
   },
   output: {
-    path: __dirname + '/dist',
-    publicPath: '/',
     filename: 'footnotes.js',
-    library: 'FootnotesTune',
-    libraryTarget: 'umd',
-    libraryExport: 'default'
+    path: path.resolve(__dirname, 'dist'),
+    // publicPath: '/',
+    library: {
+      type: 'module',
+    },
+    // library: 'FootnotesTune',
+    // libraryTarget: 'umd',
+    // libraryExport: 'default',
   },
+  experiments: {
+    outputModule: true,
+  },
+  plugins: [
+    new ESLintPlugin({
+      extensions: ['ts', 'js'], // Specify the file types to lint
+      fix: true, // Automatically fix linting issues (optional)
+      failOnError: true, // Fail the build if there are linting errors
+    }),
+    // ...other plugins if needed
+  ],
 };
