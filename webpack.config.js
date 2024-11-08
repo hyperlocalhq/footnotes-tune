@@ -33,9 +33,11 @@ export default {
           {
             loader: 'css-loader',
             options: {
-              modules: true,
+              modules: {
+                localIdentName: '[name]__[local]__[hash:base64:5]', // Ensures that class names are more readable and avoid spaces or illegal characters
+              },
               importLoaders: 1
-            }
+            },
           },
           {
             loader: 'postcss-loader',
