@@ -160,11 +160,13 @@ export default class FootnotesTune implements BlockTune {
   private holderId: any;
 
   /**
-   * @class
+   * Class constructor
    *
-   * @param data - data passed on render
-   * @param api - Editor.js API
-   * @param config - Tune's config
+   * @param {object} param0 - Parameter object.
+   * @param {FootnotesData} param0.data - Block data.
+   * @param {API} param0.api - Editor.js API.
+   * @param {BlockAPI} param0.block - Block API.
+   * @param {FootnotesTuneConfig} [param0.config] - Tune config.
    */
   constructor({ data, api, block, config = {} }: { data: FootnotesData, api: API, block: BlockAPI, config?: FootnotesTuneConfig }) {
     this.data = data;
